@@ -1,7 +1,24 @@
-from newspaper import Article
-url = "https://n.news.naver.com/article/001/0015077942"
+import os
+from dotenv import load_dotenv
+import requests
 
-article = Article(url, language='ko')
-article.download()
-article.parse()
-print(article.text)
+load_dotenv()
+
+api_key = os.getenv('GUARDIAN_API_KEY')
+
+url = "http://content.guardianapis.com/search"
+
+params = {
+    "q": "defense",
+    "show-fields" : "bodyText",
+    "page-size" : 3,
+    "api-key": api_key
+}
+
+response = requests.get(url,  params=params)
+data = response.json()
+
+for article in data["response"]["results"]:
+    print(article["webTitle"])
+    print(article["fields"]["bodyText"][:200])
+    print()
