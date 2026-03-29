@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import anthropic
 import json
+import crawler
 
 load_dotenv()
 
@@ -32,8 +33,7 @@ def summarize_article(text):
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
 
-# 테스트
-test_text = "Anthropic filed two lawsuits against the Department of Defense on Monday, alleging that the government's decision to label the artificial intelligence firm a supply chain risk was unlawful."
-
-result = summarize_article(test_text)
-print(result)
+articles = crawler.guardian_api_search()
+for article in articles:
+    result = summarize_article(article)
+    print(result)
