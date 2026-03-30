@@ -13,3 +13,9 @@ def get_nodes():
         result = summarizer.summarize_article(article)
         nodes.append(result)
     return nodes
+
+from fastapi.responses import FileResponse
+
+@app.get("/")
+def read_index():
+    return FileResponse("static/index.html")

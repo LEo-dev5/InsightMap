@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>InsightMap</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            margin: 0;
+        }
+        #graph {
+            width: 100vw;
+            height: 100vh
+        }
+    </style>
+</head>
+<body>
+    <div id="graph"></div>
+    <script>
+        fetch("api/nodes")
+            .then(response => response.json())
+            .then(data => {
+                const nodes = new vis.DataSet(
+                    data.map((item, index) => ({
+                        id: index,
+                        label: item.title
+                    }))
+                );
+                const edges = new vis.DataSet([]);
+
+                const container = document.getElementById('graph');
+                new vis.Network(container, { nodes, edges }, {});
+            })
+        </script>
+</body>
+</html>
