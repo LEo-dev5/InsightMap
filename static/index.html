@@ -13,25 +13,68 @@
             width: 100vw;
             height: 100vh
         }
+        #panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: #2a2a2a;
+            color: #ffffff;
+            padding: 30px;
+            transition: right 0.3s ease;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #panel.open {
+            right: 0;
+        }
+        #panel h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #7eb8f7;
+        }
+        #panel p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cccccc;
+        }
     </style>
 </head>
 <body>
     <div id="graph"></div>
+    <div id="panel">
+        <h2 id="panel-title"></h2>
+        <p id="panel-summary"></p>
+    </div>
     <script>
-        fetch("api/nodes")
-            .then(response => response.json())
-            .then(data => {
-                const nodes = new vis.DataSet(
-                    data.map((item, index) => ({
-                        id: index,
-                        label: item.title
-                    }))
-                );
-                const edges = new vis.DataSet([]);
+        fetch("/api/nodes")
+    .then(response => response.json())
+    .then(data => {
+        const nodes = new vis.DataSet(
+            data.nodes.map((item, index) => ({
+                id: index,
+                label: item.title.length > 15 
+                    ? item.title.slice(0, 15) + "..." 
+                    : item.title
+            }))
+        );
 
-                const container = document.getElementById('graph');
-                new vis.Network(container, { nodes, edges }, {});
-            })
+        const edges = new vis.DataSet(data.edges);
+
+        const container = document.getElementById("graph");
+        const network = new vis.Network(container, { nodes, edges }, {});
+
+        network.on("click", function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const item = data.nodes[nodeId];
+                document.getElementById("panel-title").innerText = item.title;
+                document.getElementById("panel-summary").innerText = item.summary;
+                document.getElementById("panel").classList.add("open");
+            }
+        });
+    });
         </script>
 </body>
 </html>
