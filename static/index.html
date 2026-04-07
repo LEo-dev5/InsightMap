@@ -51,14 +51,12 @@
         fetch("/api/nodes")
     .then(response => response.json())
     .then(data => {
-        const nodes = new vis.DataSet(
-            data.nodes.map((item, index) => ({
-                id: index,
-                label: item.title.length > 15 
-                    ? item.title.slice(0, 15) + "..." 
-                    : item.title
-            }))
-        );
+            const nodes = new vis.DataSet(
+                data.nodes.map((item) => ({
+                    id: item.id,
+                    label: item.label
+                }))
+            );
 
         const edges = new vis.DataSet(data.edges);
 
@@ -69,8 +67,11 @@
             if (params.nodes.length > 0) {
                 const nodeId = params.nodes[0];
                 const item = data.nodes[nodeId];
-                document.getElementById("panel-title").innerText = item.title;
-                document.getElementById("panel-summary").innerText = item.summary;
+                const articles = item.articles;
+                
+                document.getElementById("panel-title").innerText = item.label;
+                document.getElementById("panel-summary").innerText = 
+                    articles.map(a => "📰 " + a.title + "\n\n" + a.summary).join("\n\n---\n\n");
                 document.getElementById("panel").classList.add("open");
             }
         });
