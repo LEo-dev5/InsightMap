@@ -13,7 +13,7 @@ def guardian_api_search():
     "q": "defense OR military OR war",
     "section": "world",
     "show-fields": "bodyText",
-    "page-size": 3,
+    "page-size": 20,
     "api-key": api_key
 }
     response = requests.get(url,  params=params)  #api get 요청  -> url에서 params 형식으로 

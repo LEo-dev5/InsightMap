@@ -28,7 +28,7 @@ def get_nodes():
     nodes = []
     edges = []
 
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         summaries = list(executor.map(summarizer.summarize_article, articles))
 
     for result in summaries:
