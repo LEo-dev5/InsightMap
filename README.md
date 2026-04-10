@@ -120,5 +120,5 @@ InsightMap/
 
 ---
 
-> 개발자: [강용원](https://github.com/LEo-dev5)  
+> 개발자: [Kang](https://github.com/LEo-dev5)  
 > 블로그: [leo-dev5.github.io](https://leo-dev5.github.io)
