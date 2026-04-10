@@ -22,6 +22,9 @@ def guardian_api_search():
     articles = [] #빈 리스트 생성
 
     for article in data["response"]["results"]:             
-        articles.append(article["fields"]["bodyText"])
+        articles.append({
+            "text": article["fields"]["bodyText"],
+            "date": article["webPublicationDate"][:10]  # 2025-03-01 형태로
+        })
 
     return articles

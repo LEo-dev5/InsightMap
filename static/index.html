@@ -30,12 +30,12 @@
             right: 0;
         }
         #panel h2 {
-            font-size: 16px;
+            font-size: 22px;
             margin-bottom: 15px;
             color: #7eb8f7;
         }
         #panel p {
-            font-size: 14px;
+            font-size: 20px;
             line-height: 1.6;
             color: #cccccc;
         }
@@ -61,7 +61,27 @@
         const edges = new vis.DataSet(data.edges);
 
         const container = document.getElementById("graph");
-        const network = new vis.Network(container, { nodes, edges }, {});
+
+        const options = {
+            nodes: {
+                shape: "dot",
+                size: 10,
+                font: {
+                    size: 12,
+                    color: "#ffffff"
+                },
+                color: {
+                    background: "#4a9eff",
+                    border: "#2d7dd2"
+                }
+            },
+            edges: {
+                color: "#444444",
+                width: 1
+            }
+        };
+
+        const network = new vis.Network(container, { nodes, edges }, options);
 
         network.on("click", function(params) {
             if (params.nodes.length > 0) {
@@ -71,7 +91,7 @@
                 
                 document.getElementById("panel-title").innerText = item.label;
                 document.getElementById("panel-summary").innerText = 
-                    articles.map(a => "📰 " + a.title + "\n\n" + a.summary).join("\n\n---\n\n");
+                    articles.map(a => a.title + "\n" + a.date + "\n\n" + a.summary).join("\n\n---\n\n");
                 document.getElementById("panel").classList.add("open");
             }
         });

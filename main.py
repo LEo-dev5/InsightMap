@@ -28,7 +28,7 @@ def get_nodes():
     nodes = []
     edges = []
 
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         summaries = list(executor.map(summarizer.summarize_article, articles))
 
     for result in summaries:
@@ -47,7 +47,8 @@ def get_nodes():
             keyword_ids.append(keyword_to_id[keyword])
             nodes[keyword_to_id[keyword]]["articles"].append({
                 "title": result["title"],
-                "summary": result["summary"]
+                "summary": result["summary"],
+                "date": result["date"]
             })
 
         for i in range(len(keyword_ids)):
