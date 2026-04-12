@@ -4,6 +4,8 @@ import summarizer
 import crawler
 from apscheduler.schedulers.background import BackgroundScheduler
 from concurrent.futures import ThreadPoolExecutor
+import db
+from datetime import date
 
 app = FastAPI()
 cache = None
@@ -55,6 +57,7 @@ def get_nodes():
             for j in range(i + 1, len(keyword_ids)):
                 edges.append({"from": keyword_ids[i], "to": keyword_ids[j]})
 
+    db.save_snapshot(str(date.today()), nodes, edges)
     cache = {"nodes": nodes, "edges": edges}
     return cache
 
