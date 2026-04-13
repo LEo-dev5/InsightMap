@@ -61,6 +61,20 @@ def get_nodes():
     cache = {"nodes": nodes, "edges": edges}
     return cache
 
+@app.get("/api/snapshot")
+def get_snapshot(date: str):
+    data = db.load_snapshot(date)
+    if data is None:
+        return {"error": "No snapshot found for this date"}
+    return data
+
+@app.get("/api/dates")
+def get_dates():
+    from sqlalchemy import text
+    with db.engine.connect() as conn:
+        result = conn.execute(text("SELECT date FROM snapshots ORDER BY date DESC"))
+        return [str(row[0]) for row in result]
+
 from fastapi.responses import FileResponse
 
 @app.get("/")

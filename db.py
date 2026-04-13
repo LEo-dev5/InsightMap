@@ -44,3 +44,40 @@ def save_snapshot(date, nodes, edges):
                 )
 
         conn.commit()
+
+def load_snapshot(date):
+    with engine.connect() as conn:
+        # 1. 날짜로 snapshot_id 찾기
+        result = conn.execute(
+            text("SELECT id FROM snapshots WHERE date = :date"),
+            {"date": date}
+        )
+        row = result.fetchone()
+        if row is None:
+            return None
+        snapshot_id = row[0]
+
+        # 2. 노드 조회
+        result = conn.execute(
+            text("SELECT id, label FROM nodes WHERE snapshot_id = :snapshot_id"),
+            {"snapshot_id": snapshot_id}
+        )
+        nodes = [{"id": row[0], "label": row[1], "articles": []} for row in result]
+
+        # 3. 각 노드의 기사 조회
+        for node in nodes:
+            result = conn.execute(
+                text("""
+                    SELECT a.title, a.summary, a.date 
+                    FROM articles a
+                    JOIN node_articles na ON a.id = na.article_id
+                    WHERE na.node_id = :node_id
+                """),
+                {"node_id": node["id"]}
+            )
+            node["articles"] = [
+                {"title": row[0], "summary": row[1], "date": str(row[2])}
+                for row in result
+            ]
+
+        return {"nodes": nodes, "edges": []}

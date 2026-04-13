@@ -39,63 +39,95 @@
             line-height: 1.6;
             color: #cccccc;
         }
+        #toolbar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        #date-select {
+            background: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <div id="toolbar">
+        <select id="date-select">
+            <option value="">오늘 뉴스</option>
+        </select>
+    </div>
     <div id="graph"></div>
     <div id="panel">
         <h2 id="panel-title"></h2>
         <p id="panel-summary"></p>
     </div>
     <script>
-        fetch("/api/nodes")
-    .then(response => response.json())
-    .then(data => {
-            const nodes = new vis.DataSet(
-                data.nodes.map((item) => ({
-                    id: item.id,
-                    label: item.label
-                }))
-            );
+    let network;
+    const container = document.getElementById("graph");
+    const options = {
+        nodes: {
+            shape: "dot",
+            size: 10,
+            font: { size: 12, color: "#ffffff" },
+            color: { background: "#4a9eff", border: "#2d7dd2" }
+        },
+        edges: { color: "#444444", width: 1 }
+    };
 
+    function updateGraph(data) {
+        const nodes = new vis.DataSet(
+            data.nodes.map((item) => ({ id: item.id, label: item.label }))
+        );
         const edges = new vis.DataSet(data.edges);
-
-        const container = document.getElementById("graph");
-
-        const options = {
-            nodes: {
-                shape: "dot",
-                size: 10,
-                font: {
-                    size: 12,
-                    color: "#ffffff"
-                },
-                color: {
-                    background: "#4a9eff",
-                    border: "#2d7dd2"
-                }
-            },
-            edges: {
-                color: "#444444",
-                width: 1
-            }
-        };
-
-        const network = new vis.Network(container, { nodes, edges }, options);
+        network = new vis.Network(container, { nodes, edges }, options);
 
         network.on("click", function(params) {
             if (params.nodes.length > 0) {
                 const nodeId = params.nodes[0];
                 const item = data.nodes[nodeId];
                 const articles = item.articles;
-                
                 document.getElementById("panel-title").innerText = item.label;
-                document.getElementById("panel-summary").innerText = 
+                document.getElementById("panel-summary").innerText =
                     articles.map(a => a.title + "\n" + a.date + "\n\n" + a.summary).join("\n\n---\n\n");
                 document.getElementById("panel").classList.add("open");
             }
         });
+    }
+
+    fetch("/api/dates")
+        .then(response => response.json())
+        .then(dates => {
+            const select = document.getElementById("date-select");
+            dates.forEach(date => {
+                const option = document.createElement("option");
+                option.value = date;
+                option.text = date;
+                select.appendChild(option);
+            });
+        });
+
+    fetch("/api/nodes")
+        .then(response => response.json())
+        .then(data => updateGraph(data));
+
+    document.getElementById("date-select").addEventListener("change", function() {
+        const date = this.value;
+        if (date === "") {
+            fetch("/api/nodes")
+                .then(response => response.json())
+                .then(data => updateGraph(data));
+        } else {
+            fetch("/api/snapshot?date=" + date)
+                .then(response => response.json())
+                .then(data => updateGraph(data));
+        }
     });
-        </script>
+</script>
 </body>
 </html>
