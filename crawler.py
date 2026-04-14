@@ -6,25 +6,37 @@ load_dotenv()
 
 def guardian_api_search():
     api_key = os.getenv('GUARDIAN_API_KEY')
+    
+    if not api_key:
+        raise ValueError("GUARDIAN_API_KEY가 설정되지 않았어요")
 
-    url = "http://content.guardianapis.com/search"
+    url = "https://content.guardianapis.com/search"
 
     params = {
-    "q": "defense OR military OR war",
-    "section": "world",
-    "show-fields": "bodyText",
-    "page-size": 20,
-    "api-key": api_key
-}
-    response = requests.get(url,  params=params)  #api get 요청  -> url에서 params 형식으로 
-    data = response.json()      #json 형식으로 파싱
+        "q": "defense OR military OR war",
+        "section": "world",
+        "show-fields": "bodyText",
+        "page-size": 20,
+        "api-key": api_key
+    }
 
-    articles = [] #빈 리스트 생성
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.Timeout:
+        raise Exception("Guardian API 요청 시간이 초과됐어요")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Guardian API 요청 실패: {e}")
 
-    for article in data["response"]["results"]:             
-        articles.append({
-            "text": article["fields"]["bodyText"],
-            "date": article["webPublicationDate"][:10]  # 2025-03-01 형태로
-        })
+    articles = []
+    for article in data["response"]["results"]:
+        try:
+            articles.append({
+                "text": article["fields"]["bodyText"],
+                "date": article["webPublicationDate"][:10]
+            })
+        except KeyError:
+            continue  # bodyText 없는 기사는 건너뜀
 
     return articles
