@@ -34,7 +34,8 @@ def guardian_api_search():
         try:
             articles.append({
                 "text": article["fields"]["bodyText"],
-                "date": article["webPublicationDate"][:10]
+                "date": article["webPublicationDate"][:10],
+                "url": article["webUrl"]
             })
         except KeyError:
             continue  # bodyText 없는 기사는 건너뜀

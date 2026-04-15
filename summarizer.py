@@ -46,6 +46,7 @@ def summarize_article(article):
         clean = raw.replace("```json", "").replace("```", "").strip()
         result = json.loads(clean)
         result["date"] = date
+        result["url"] = article.get("url", "")
         return result
 
     except json.JSONDecodeError:

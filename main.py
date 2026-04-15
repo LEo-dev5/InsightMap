@@ -50,7 +50,8 @@ def get_nodes():
             nodes[keyword_to_id[keyword]]["articles"].append({
                 "title": result["title"],
                 "summary": result["summary"],
-                "date": result["date"]
+                "date": result["date"],
+                "url": result.get("url", "")
             })
 
         for i in range(len(keyword_ids)):

@@ -11,7 +11,8 @@
         }
         #graph {
             width: 100vw;
-            height: 100vh
+            height: 100vh;
+            z-index: 1;
         }
         #panel {
             position: fixed;
@@ -25,6 +26,7 @@
             transition: right 0.3s ease;
             box-sizing: border-box;
             overflow-y: auto;
+            z-index: 10;
         }
         #panel.open {
             right: 0;
@@ -64,26 +66,18 @@
             z-index: 999;
         }
         #panel-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+            float: right;
             background: none;
             border: none;
             color: #ffffff;
             font-size: 18px;
             cursor: pointer;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="panel">
-    <button id="panel-close">✕</button>
-    <h2 id="panel-title"></h2>
-    <p id="panel-summary"></p>
-    </div>
-    <div id="loading">
-    뉴스 분석 중...
-    </div>
+    <div id="loading">뉴스 분석 중...</div>
     <div id="toolbar">
         <select id="date-select">
             <option value="">오늘 뉴스</option>
@@ -91,6 +85,7 @@
     </div>
     <div id="graph"></div>
     <div id="panel">
+        <button id="panel-close">✕</button>
         <h2 id="panel-title"></h2>
         <p id="panel-summary"></p>
     </div>
@@ -120,8 +115,13 @@
                 const item = data.nodes.find(n => n.id === nodeId);
                 const articles = item.articles;
                 document.getElementById("panel-title").innerText = item.label;
-                document.getElementById("panel-summary").innerText =
-                    articles.map(a => a.title + "\n" + a.date + "\n\n" + a.summary).join("\n\n---\n\n");
+                document.getElementById("panel-summary").innerHTML =
+                    articles.map(a => 
+                        `<b>${a.title}</b><br>
+                        <small>${a.date}</small><br><br>
+                        ${a.summary}<br><br>
+                        <a href="${a.url}" target="_blank" style="color:#4a9eff">원문 보기</a>`
+                    ).join("<br><br>---<br><br>");
                 document.getElementById("panel").classList.add("open");
             }
         });
