@@ -9,6 +9,12 @@
 
 ---
 
+## 📸 스크린샷
+
+![메인 그래프](static/images/main.png)
+
+![사이드패널](static/images/detail.png)
+
 ## 💡 왜 만들었나요?
 
 매일 아침 뉴스를 보면서 이런 생각을 했습니다.
