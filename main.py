@@ -28,7 +28,7 @@ def get_nodes():
     
     keyword_to_id = {}
     nodes = []
-    edges = []
+    edges = {}  # (from, to) → weight 딕셔너리
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         summaries = list(executor.map(summarizer.summarize_article, articles))
@@ -58,10 +58,19 @@ def get_nodes():
 
         for i in range(len(keyword_ids)):
             for j in range(i + 1, len(keyword_ids)):
-                edges.append({"from": keyword_ids[i], "to": keyword_ids[j]})
+                key = (keyword_ids[i], keyword_ids[j])
+                if key in edges:
+                    edges[key] += 1
+                else:
+                    edges[key] = 1
 
-    db.save_snapshot(str(date.today()), nodes, edges)
-    cache = {"nodes": nodes, "edges": edges}
+    edges_list = [
+        {"from": k[0], "to": k[1], "weight": v}
+        for k, v in edges.items()
+    ]
+
+    db.save_snapshot(str(date.today()), nodes, edges_list)
+    cache = {"nodes": nodes, "edges": edges_list}
     return cache
 
 @app.get("/api/snapshot")
