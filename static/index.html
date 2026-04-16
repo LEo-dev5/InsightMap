@@ -125,7 +125,13 @@
                 size: 5 + (item.article_count * 3)
             }))
         );
-        const edges = new vis.DataSet(data.edges);
+        const edges = new vis.DataSet(
+            data.edges.map((edge) => ({
+                from: edge.from,
+                to: edge.to,
+                width: 1 + edge.weight * 0.5
+            }))
+        );
         network = new vis.Network(container, { nodes, edges }, options);
 
         network.once("stabilized", function() {
