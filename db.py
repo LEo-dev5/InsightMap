@@ -23,8 +23,8 @@ def save_snapshot(date, nodes, edges):
                 title = article["title"]
                 if title not in article_id_map:
                     result = conn.execute(
-                        text("INSERT INTO articles (title, summary, date) VALUES (:title, :summary, :date) RETURNING id"),
-                        {"title": title, "summary": article["summary"], "date": article["date"]}
+                        text("INSERT INTO articles (title, summary, date, url) VALUES (:title, :summary, :date, :url) RETURNING id"),
+                        {"title": title, "summary": article["summary"], "date": article["date"], "url": article.get("url", "")}
                     )
                     article_id_map[title] = result.fetchone()[0]
 
@@ -51,8 +51,8 @@ def save_snapshot(date, nodes, edges):
             to_db_id = node_id_map.get(edge["to"])
             if from_db_id and to_db_id:
                 conn.execute(
-                    text("INSERT INTO edges (snapshot_id, from_node, to_node) VALUES (:snapshot_id, :from_node, :to_node)"),
-                    {"snapshot_id": snapshot_id, "from_node": from_db_id, "to_node": to_db_id}
+                    text("INSERT INTO edges (snapshot_id, from_node, to_node, weight) VALUES (:snapshot_id, :from_node, :to_node, :weight)"),
+                    {"snapshot_id": snapshot_id, "from_node": from_db_id, "to_node": to_db_id, "weight": edge.get("weight", 1)}
                 )
 
         conn.commit()
@@ -69,34 +69,35 @@ def load_snapshot(date):
             return None
         snapshot_id = row[0]
 
-        # 2. 노드 조회
+        # 2. 노드 + 기사 한 번에 조회
         result = conn.execute(
-            text("SELECT id, label FROM nodes WHERE snapshot_id = :snapshot_id"),
+            text("""
+                SELECT n.id, n.label, a.title, a.summary, a.date, a.url
+                FROM nodes n
+                LEFT JOIN node_articles na ON n.id = na.node_id
+                LEFT JOIN articles a ON na.article_id = a.id
+                WHERE n.snapshot_id = :snapshot_id
+                ORDER BY n.id
+            """),
             {"snapshot_id": snapshot_id}
         )
-        nodes = [{"id": row[0], "label": row[1], "articles": []} for row in result]
+        nodes_map = {}
+        for row in result:
+            node_id, label, title, summary, date, url = row
+            if node_id not in nodes_map:
+                nodes_map[node_id] = {"id": node_id, "label": label, "articles": [], "article_count": 0}
+            if title:
+                nodes_map[node_id]["articles"].append(
+                    {"title": title, "summary": summary, "date": str(date), "url": url or ""}
+                )
+                nodes_map[node_id]["article_count"] += 1
+        nodes = list(nodes_map.values())
 
-        # 3. 각 노드의 기사 조회
-        for node in nodes:
-            result = conn.execute(
-                text("""
-                    SELECT a.title, a.summary, a.date 
-                    FROM articles a
-                    JOIN node_articles na ON a.id = na.article_id
-                    WHERE na.node_id = :node_id
-                """),
-                {"node_id": node["id"]}
-            )
-            node["articles"] = [
-                {"title": row[0], "summary": row[1], "date": str(row[2])}
-                for row in result
-            ]
-
-        # 4. 엣지 조회
+        # 3. 엣지 조회
         result = conn.execute(
-            text("SELECT from_node, to_node FROM edges WHERE snapshot_id = :snapshot_id"),
+            text("SELECT from_node, to_node, weight FROM edges WHERE snapshot_id = :snapshot_id"),
             {"snapshot_id": snapshot_id}
         )
-        edges = [{"from": row[0], "to": row[1]} for row in result]
+        edges = [{"from": row[0], "to": row[1], "weight": row[2]} for row in result]
 
         return {"nodes": nodes, "edges": edges}
