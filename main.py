@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import summarizer
 import crawler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -89,8 +89,6 @@ def get_dates():
     with db.engine.connect() as conn:
         result = conn.execute(text("SELECT date FROM snapshots ORDER BY date DESC"))
         return [str(row[0]) for row in result]
-
-from fastapi.responses import FileResponse
 
 @app.get("/")
 def read_index():

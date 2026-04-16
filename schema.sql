@@ -29,5 +29,6 @@ CREATE TABLE edges (
     id SERIAL PRIMARY KEY,
     snapshot_id INTEGER REFERENCES snapshots(id),
     from_node INTEGER REFERENCES nodes(id),
-    to_node INTEGER REFERENCES nodes(id)
+    to_node INTEGER REFERENCES nodes(id),
+    weight INTEGER DEFAULT 1
 );
