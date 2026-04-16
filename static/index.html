@@ -16,9 +16,11 @@
         }
         #panel {
             position: fixed;
-            right: -400px;
+            right: -100%;
             top: 0;
-            width: 400px;
+            width: 30%;
+            min-width: 280px;
+            max-width: 450px;
             height: 100vh;
             background: #2a2a2a;
             color: #ffffff;
@@ -99,7 +101,20 @@
             font: { size: 12, color: "#ffffff" },
             color: { background: "#4a9eff", border: "#2d7dd2" }
         },
-        edges: { color: "#444444", width: 1 }
+        edges: { color: "#444444", width: 1 },
+        physics: {
+            barnesHut: {
+                gravitationalConstant: -8000,
+                centralGravity: 5.0,
+                springLength: 50,
+                springConstant: 0.1
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 200,
+                fit: true
+            }
+        }
     };
 
     function updateGraph(data) {
@@ -108,6 +123,10 @@
         );
         const edges = new vis.DataSet(data.edges);
         network = new vis.Network(container, { nodes, edges }, options);
+
+        network.once("stabilized", function() {
+            network.setOptions({ physics: { enabled: false } });
+        });
 
         network.on("click", function(params) {
             if (params.nodes.length > 0) {
@@ -121,7 +140,7 @@
                         <small>${a.date}</small><br><br>
                         ${a.summary}<br><br>
                         <a href="${a.url}" target="_blank" style="color:#4a9eff">원문 보기</a>`
-                    ).join("<br><br>---<br><br>");
+                    ).join(`<hr style="border: none; border-top: 1px solid #444; margin: 20px 0;">`);
                 document.getElementById("panel").classList.add("open");
             }
         });
