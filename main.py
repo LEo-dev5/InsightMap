@@ -6,9 +6,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from concurrent.futures import ThreadPoolExecutor
 import db
 from datetime import date
+import threading
 
 app = FastAPI()
 cache = None
+cache_lock = threading.Lock()
 def refresh_cache():
     global cache
     cache = None
@@ -21,57 +23,58 @@ scheduler.start()
 @app.get("/api/nodes")
 def get_nodes():
     global cache
-    if cache is not None:
-        return cache
-    
-    articles = crawler.guardian_api_search()
-    
-    keyword_to_id = {}
-    nodes = []
-    edges = {}  # (from, to) → weight 딕셔너리
+    with cache_lock:
+        if cache is not None:
+            return cache
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        summaries = list(executor.map(summarizer.summarize_article, articles))
+        articles = crawler.guardian_api_search()
 
-    for result in summaries:
-        keywords = result["keywords"]
-        keyword_ids = []
-        
-        for keyword in keywords:
-            if keyword not in keyword_to_id:
-                new_id = len(nodes)
-                keyword_to_id[keyword] = new_id
-                nodes.append({
-                    "id": new_id,
-                    "label": keyword,
-                    "articles": [],
-                    "article_count": 0
+        keyword_to_id = {}
+        nodes = []
+        edges = {}  # (from, to) → weight 딕셔너리
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            summaries = list(executor.map(summarizer.summarize_article, articles))
+
+        for result in summaries:
+            keywords = result["keywords"]
+            keyword_ids = []
+
+            for keyword in keywords:
+                if keyword not in keyword_to_id:
+                    new_id = len(nodes)
+                    keyword_to_id[keyword] = new_id
+                    nodes.append({
+                        "id": new_id,
+                        "label": keyword,
+                        "articles": [],
+                        "article_count": 0
+                    })
+                keyword_ids.append(keyword_to_id[keyword])
+                nodes[keyword_to_id[keyword]]["articles"].append({
+                    "title": result["title"],
+                    "summary": result["summary"],
+                    "date": result["date"],
+                    "url": result.get("url", "")
                 })
-            keyword_ids.append(keyword_to_id[keyword])
-            nodes[keyword_to_id[keyword]]["articles"].append({
-                "title": result["title"],
-                "summary": result["summary"],
-                "date": result["date"],
-                "url": result.get("url", "")
-            })
-            nodes[keyword_to_id[keyword]]["article_count"] += 1
+                nodes[keyword_to_id[keyword]]["article_count"] += 1
 
-        for i in range(len(keyword_ids)):
-            for j in range(i + 1, len(keyword_ids)):
-                key = (keyword_ids[i], keyword_ids[j])
-                if key in edges:
-                    edges[key] += 1
-                else:
-                    edges[key] = 1
+            for i in range(len(keyword_ids)):
+                for j in range(i + 1, len(keyword_ids)):
+                    key = (keyword_ids[i], keyword_ids[j])
+                    if key in edges:
+                        edges[key] += 1
+                    else:
+                        edges[key] = 1
 
-    edges_list = [
-        {"from": k[0], "to": k[1], "weight": v}
-        for k, v in edges.items()
-    ]
+        edges_list = [
+            {"from": k[0], "to": k[1], "weight": v}
+            for k, v in edges.items()
+        ]
 
-    db.save_snapshot(str(date.today()), nodes, edges_list)
-    cache = {"nodes": nodes, "edges": edges_list}
-    return cache
+        db.save_snapshot(str(date.today()), nodes, edges_list)
+        cache = {"nodes": nodes, "edges": edges_list}
+        return cache
 
 @app.get("/api/snapshot")
 def get_snapshot(date: str):
