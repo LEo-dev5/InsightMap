@@ -44,7 +44,8 @@ def get_nodes():
                 nodes.append({
                     "id": new_id,
                     "label": keyword,
-                    "articles": []
+                    "articles": [],
+                    "article_count": 0
                 })
             keyword_ids.append(keyword_to_id[keyword])
             nodes[keyword_to_id[keyword]]["articles"].append({
@@ -53,6 +54,7 @@ def get_nodes():
                 "date": result["date"],
                 "url": result.get("url", "")
             })
+            nodes[keyword_to_id[keyword]]["article_count"] += 1
 
         for i in range(len(keyword_ids)):
             for j in range(i + 1, len(keyword_ids)):

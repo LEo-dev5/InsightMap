@@ -119,7 +119,11 @@
 
     function updateGraph(data) {
         const nodes = new vis.DataSet(
-            data.nodes.map((item) => ({ id: item.id, label: item.label }))
+            data.nodes.map((item) => ({
+                id: item.id,
+                label: item.label,
+                size: 5 + (item.article_count * 3)
+            }))
         );
         const edges = new vis.DataSet(data.edges);
         network = new vis.Network(container, { nodes, edges }, options);
